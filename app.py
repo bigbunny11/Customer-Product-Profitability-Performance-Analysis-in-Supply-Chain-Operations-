@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import warnings
 warnings.filterwarnings('ignore')
- 
+
 # ─── PAGE CONFIG ────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="APL Logistics | Profitability Intelligence",
@@ -13,22 +13,22 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
- 
+
 # ─── CUSTOM CSS ─────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
- 
+
 html, body, [class*="css"] {
     font-family: 'DM Sans', sans-serif;
 }
- 
+
 /* Dark navy background */
 .stApp {
     background-color: #070d1a;
     color: #e8eaf0;
 }
- 
+
 /* Sidebar */
 [data-testid="stSidebar"] {
     background-color: #0d1627;
@@ -37,7 +37,7 @@ html, body, [class*="css"] {
 [data-testid="stSidebar"] * {
     color: #c8d0e0 !important;
 }
- 
+
 /* KPI Cards */
 .kpi-card {
     background: linear-gradient(135deg, #0d1e35 0%, #122240 100%);
@@ -78,7 +78,7 @@ html, body, [class*="css"] {
     margin-top: 6px;
     font-weight: 500;
 }
- 
+
 /* Section headers */
 .section-title {
     font-family: 'Syne', sans-serif;
@@ -89,7 +89,7 @@ html, body, [class*="css"] {
     padding-left: 12px;
     border-left: 3px solid #0077ff;
 }
- 
+
 /* Chart container */
 .chart-box {
     background: #0d1627;
@@ -97,13 +97,13 @@ html, body, [class*="css"] {
     border-radius: 12px;
     padding: 16px;
 }
- 
+
 /* Divider */
 hr { border-color: #1e2d4a !important; }
- 
+
 /* Plotly chart bg */
 .js-plotly-plot { border-radius: 12px; }
- 
+
 /* Selectbox & slider labels */
 .stSelectbox label, .stSlider label, .stMultiSelect label {
     color: #7a8faa !important;
@@ -111,7 +111,7 @@ hr { border-color: #1e2d4a !important; }
     text-transform: uppercase;
     letter-spacing: 1px;
 }
- 
+
 /* Header banner */
 .header-banner {
     background: linear-gradient(135deg, #0a1628 0%, #0d2044 50%, #091420 100%);
@@ -145,36 +145,34 @@ hr { border-color: #1e2d4a !important; }
 }
 </style>
 """, unsafe_allow_html=True)
- 
+
 # ─── LOAD DATA ───────────────────────────────────────────────────────────────
 @st.cache_data
 def load_data():
-    file_id = "1kKQx31z9i1eG1unARyh0iI-C8aGJR7Ws"
-    url = f"https://drive.google.com/uc?export=download&id={file_id}"
-    df = pd.read_csv(url)
+    df = pd.read_csv("APL_Logistics_-_APL_Logistics.csv")
     df.columns = df.columns.str.strip()
     return df
 
 with st.spinner("Loading dashboard data..."):
     df = load_data()
- df = load_data()
+
 # ─── SIDEBAR FILTERS ─────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("### 🎛️ Filters")
     st.markdown("---")
- 
+
     segments = ["All"] + sorted(df["Customer Segment"].dropna().unique().tolist())
     selected_segment = st.selectbox("Customer Segment", segments)
- 
+
     markets = ["All"] + sorted(df["Market"].dropna().unique().tolist())
     selected_market = st.selectbox("Market", markets)
- 
+
     categories = ["All"] + sorted(df["Category Name"].dropna().unique().tolist())
     selected_category = st.selectbox("Product Category", categories)
- 
+
     shipping_modes = ["All"] + sorted(df["Shipping Mode"].dropna().unique().tolist())
     selected_shipping = st.selectbox("Shipping Mode", shipping_modes)
- 
+
     st.markdown("---")
     st.markdown("### 💸 Discount Filter")
     max_discount = st.slider(
@@ -182,11 +180,11 @@ with st.sidebar:
         min_value=0, max_value=100,
         value=100, step=5
     )
- 
+
     st.markdown("---")
     st.markdown("### ℹ️ About")
     st.markdown("<small style='color:#4a7aaa'>APL Logistics — KWE Group<br>Profitability Intelligence Dashboard<br>Supply Chain Analytics</small>", unsafe_allow_html=True)
- 
+
 # ─── APPLY FILTERS ───────────────────────────────────────────────────────────
 filtered = df.copy()
 if selected_segment != "All":
@@ -198,7 +196,7 @@ if selected_category != "All":
 if selected_shipping != "All":
     filtered = filtered[filtered["Shipping Mode"] == selected_shipping]
 filtered = filtered[filtered["Order Item Discount Rate"] <= (max_discount / 100)]
- 
+
 # ─── HEADER ──────────────────────────────────────────────────────────────────
 st.markdown("""
 <div class="header-banner">
@@ -206,7 +204,7 @@ st.markdown("""
     <p class="header-sub">Customer · Product · Market · Discount Analysis | Supply Chain Commercial Dashboard</p>
 </div>
 """, unsafe_allow_html=True)
- 
+
 # ─── KPI SECTION ─────────────────────────────────────────────────────────────
 total_revenue  = filtered["Sales"].sum()
 total_profit   = filtered["Order Profit Per Order"].sum()
@@ -215,7 +213,7 @@ avg_discount   = filtered["Order Item Discount Rate"].mean() * 100
 total_orders   = filtered.shape[0]
 loss_orders    = (filtered["Order Profit Per Order"] < 0).sum()
 loss_pct       = (loss_orders / total_orders * 100) if total_orders > 0 else 0
- 
+
 col1, col2, col3, col4, col5 = st.columns(5)
 kpis = [
     (col1, "Total Revenue",    f"${total_revenue/1e6:.2f}M",  "Gross Sales"),
@@ -232,14 +230,14 @@ for col, label, value, sub in kpis:
             <div class="kpi-value">{value}</div>
             <div class="kpi-sub">{sub}</div>
         </div>""", unsafe_allow_html=True)
- 
+
 # ─── PLOTLY THEME ────────────────────────────────────────────────────────────
 PLOT_BG   = "#0d1627"
 PAPER_BG  = "#0d1627"
 FONT_CLR  = "#c8d0e0"
 GRID_CLR  = "#1e2d4a"
 PALETTE   = ["#0077ff","#00d4ff","#00c48c","#ff6b6b","#ffd166","#a78bfa","#f97316","#34d399"]
- 
+
 def chart_layout(fig, title="", height=380):
     fig.update_layout(
         title=dict(text=title, font=dict(family="Syne", size=15, color="#ffffff"), x=0.01),
@@ -253,21 +251,21 @@ def chart_layout(fig, title="", height=380):
         yaxis=dict(gridcolor=GRID_CLR, linecolor=GRID_CLR, tickfont=dict(color=FONT_CLR)),
     )
     return fig
- 
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # MODULE 1 — REVENUE & PROFIT OVERVIEW
 # ═══════════════════════════════════════════════════════════════════════════════
 st.markdown('<div class="section-title">📊 Revenue & Profit Overview</div>', unsafe_allow_html=True)
- 
+
 col_a, col_b = st.columns(2)
- 
+
 with col_a:
     # Revenue vs Profit by Market
     mkt = filtered.groupby("Market").agg(
         Revenue=("Sales","sum"),
         Profit=("Order Profit Per Order","sum")
     ).reset_index().sort_values("Revenue", ascending=False)
- 
+
     fig = go.Figure()
     fig.add_bar(name="Revenue", x=mkt["Market"], y=mkt["Revenue"],
                 marker_color=PALETTE[0], opacity=0.85)
@@ -276,7 +274,7 @@ with col_a:
     fig.update_layout(barmode="group")
     chart_layout(fig, "Revenue vs Profit by Market")
     st.plotly_chart(fig, use_container_width=True)
- 
+
 with col_b:
     # Profit Margin by Market (gauge-style bar)
     mkt["Margin_%"] = (mkt["Profit"] / mkt["Revenue"] * 100).round(2)
@@ -287,7 +285,7 @@ with col_b:
     fig2.update_coloraxes(showscale=False)
     chart_layout(fig2, "Profit Margin % by Market")
     st.plotly_chart(fig2, use_container_width=True)
- 
+
 # Shipping mode profit breakdown
 col_c, col_d = st.columns(2)
 with col_c:
@@ -302,7 +300,7 @@ with col_c:
     fig3.update_traces(textinfo="percent+label", textfont_size=12)
     chart_layout(fig3, "Revenue Share by Shipping Mode")
     st.plotly_chart(fig3, use_container_width=True)
- 
+
 with col_d:
     # Order status profit impact
     status = filtered.groupby("Order Status").agg(
@@ -317,12 +315,12 @@ with col_d:
     fig4.update_xaxes(tickangle=-30)
     chart_layout(fig4, "Profit by Order Status")
     st.plotly_chart(fig4, use_container_width=True)
- 
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # MODULE 2 — CUSTOMER VALUE DASHBOARD
 # ═══════════════════════════════════════════════════════════════════════════════
 st.markdown('<div class="section-title">👥 Customer Value Dashboard</div>', unsafe_allow_html=True)
- 
+
 cust = filtered.groupby("Customer Id").agg(
     Total_Sales=("Sales","sum"),
     Total_Profit=("Order Profit Per Order","sum"),
@@ -332,7 +330,7 @@ cust["Margin_%"] = (cust["Total_Profit"] / cust["Total_Sales"] * 100).round(2)
 cust["Value_Tier"] = pd.qcut(cust["Total_Profit"], q=4,
                               labels=["Low Value","Mid Value","High Value","Top Performer"],
                               duplicates="drop")
- 
+
 col_e, col_f = st.columns(2)
 with col_e:
     # Top 15 customers by profit
@@ -345,7 +343,7 @@ with col_e:
     fig5.update_coloraxes(showscale=False)
     chart_layout(fig5, "Top 15 Customers by Profit", height=420)
     st.plotly_chart(fig5, use_container_width=True)
- 
+
 with col_f:
     # Bottom 15 (loss-making)
     bot15 = cust.nsmallest(15, "Total_Profit")
@@ -357,7 +355,7 @@ with col_f:
     fig6.update_coloraxes(showscale=False)
     chart_layout(fig6, "Bottom 15 Customers (Loss-Making)", height=420)
     st.plotly_chart(fig6, use_container_width=True)
- 
+
 col_g, col_h = st.columns(2)
 with col_g:
     # Customer segment contribution
@@ -370,7 +368,7 @@ with col_g:
                   text_auto=".2s")
     chart_layout(fig7, "Revenue & Profit by Customer Segment")
     st.plotly_chart(fig7, use_container_width=True)
- 
+
 with col_h:
     # Value tier distribution
     tier_counts = cust["Value_Tier"].value_counts().reset_index()
@@ -380,12 +378,12 @@ with col_h:
     fig8.update_traces(textinfo="percent+label")
     chart_layout(fig8, "Customer Value Tier Distribution")
     st.plotly_chart(fig8, use_container_width=True)
- 
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # MODULE 3 — PRODUCT & CATEGORY PERFORMANCE
 # ═══════════════════════════════════════════════════════════════════════════════
 st.markdown('<div class="section-title">📦 Product & Category Performance</div>', unsafe_allow_html=True)
- 
+
 cat = filtered.groupby("Category Name").agg(
     Revenue=("Sales","sum"),
     Profit=("Order Profit Per Order","sum"),
@@ -394,7 +392,7 @@ cat = filtered.groupby("Category Name").agg(
 ).reset_index()
 cat["Margin_%"] = (cat["Profit"] / cat["Revenue"] * 100).round(2)
 cat = cat.sort_values("Profit", ascending=False)
- 
+
 col_i, col_j = st.columns(2)
 with col_i:
     fig9 = px.bar(cat, x="Category Name", y="Margin_%",
@@ -405,7 +403,7 @@ with col_i:
     fig9.update_xaxes(tickangle=-45)
     chart_layout(fig9, "Profit Margin % by Category", height=420)
     st.plotly_chart(fig9, use_container_width=True)
- 
+
 with col_j:
     # Bubble: Revenue vs Profit, size = Orders
     fig10 = px.scatter(cat, x="Revenue", y="Profit", size="Orders",
@@ -415,7 +413,7 @@ with col_j:
     fig10.update_traces(textposition="top center", textfont_size=9)
     chart_layout(fig10, "Revenue vs Profit Bubble (Category)", height=420)
     st.plotly_chart(fig10, use_container_width=True)
- 
+
 # Top & Bottom Products
 col_k, col_l = st.columns(2)
 prod = filtered.groupby("Product Name").agg(
@@ -423,7 +421,7 @@ prod = filtered.groupby("Product Name").agg(
     Profit=("Order Profit Per Order","sum")
 ).reset_index()
 prod["Margin_%"] = (prod["Profit"] / prod["Revenue"] * 100).round(2)
- 
+
 with col_k:
     top_prod = prod.nlargest(12, "Profit")
     fig11 = px.bar(top_prod, x="Profit", y="Product Name", orientation="h",
@@ -433,7 +431,7 @@ with col_k:
     fig11.update_coloraxes(showscale=False)
     chart_layout(fig11, "Top 12 Products by Profit", height=420)
     st.plotly_chart(fig11, use_container_width=True)
- 
+
 with col_l:
     bot_prod = prod.nsmallest(12, "Profit")
     fig12 = px.bar(bot_prod, x="Profit", y="Product Name", orientation="h",
@@ -443,12 +441,12 @@ with col_l:
     fig12.update_coloraxes(showscale=False)
     chart_layout(fig12, "Bottom 12 Products (Loss-Making)", height=420)
     st.plotly_chart(fig12, use_container_width=True)
- 
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # MODULE 4 — DISCOUNT IMPACT ANALYZER
 # ═══════════════════════════════════════════════════════════════════════════════
 st.markdown('<div class="section-title">💸 Discount Impact Analyzer</div>', unsafe_allow_html=True)
- 
+
 disc = filtered.copy()
 disc["Discount_Bin"] = pd.cut(
     disc["Order Item Discount Rate"],
@@ -461,7 +459,7 @@ disc_grp = disc.groupby("Discount_Bin", observed=True).agg(
     Orders=("Sales","count"),
     Total_Profit=("Order Profit Per Order","sum")
 ).reset_index()
- 
+
 col_m, col_n = st.columns(2)
 with col_m:
     fig13 = px.bar(disc_grp, x="Discount_Bin", y="Avg_Profit_Ratio",
@@ -472,7 +470,7 @@ with col_m:
     fig13.update_coloraxes(showscale=False)
     chart_layout(fig13, "Avg Profit Ratio by Discount Band")
     st.plotly_chart(fig13, use_container_width=True)
- 
+
 with col_n:
     fig14 = px.scatter(disc, x="Order Item Discount Rate", y="Order Profit Per Order",
                        color="Order Item Profit Ratio",
@@ -483,7 +481,7 @@ with col_n:
     fig14.update_coloraxes(showscale=False)
     chart_layout(fig14, "Discount Rate vs Profit Per Order (Scatter)")
     st.plotly_chart(fig14, use_container_width=True)
- 
+
 # What-if Discount Scenario
 st.markdown("#### 🔮 What-If Discount Scenario")
 col_o, col_p, col_q = st.columns([1, 1, 2])
@@ -512,12 +510,12 @@ with col_q:
     ))
     chart_layout(fig15, f"Waterfall: Impact of {what_if_disc}% Discount", height=300)
     st.plotly_chart(fig15, use_container_width=True)
- 
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # MODULE 5 — MARKET & REGIONAL ANALYSIS
 # ═══════════════════════════════════════════════════════════════════════════════
 st.markdown('<div class="section-title">🌍 Market & Regional Profit Analysis</div>', unsafe_allow_html=True)
- 
+
 region = filtered.groupby("Order Region").agg(
     Revenue=("Sales","sum"),
     Profit=("Order Profit Per Order","sum"),
@@ -525,7 +523,7 @@ region = filtered.groupby("Order Region").agg(
 ).reset_index()
 region["Margin_%"] = (region["Profit"] / region["Revenue"] * 100).round(2)
 region = region.sort_values("Profit", ascending=False)
- 
+
 col_r, col_s = st.columns(2)
 with col_r:
     fig16 = px.bar(region, x="Margin_%", y="Order Region", orientation="h",
@@ -535,21 +533,21 @@ with col_r:
     fig16.update_coloraxes(showscale=False)
     chart_layout(fig16, "Profit Margin % by Region", height=420)
     st.plotly_chart(fig16, use_container_width=True)
- 
+
 with col_s:
     fig17 = px.treemap(region, path=["Order Region"], values="Revenue",
                        color="Margin_%",
                        color_continuous_scale=["#ff2244","#ffd166","#00c48c"])
     chart_layout(fig17, "Revenue Treemap by Region (color=Margin%)", height=420)
     st.plotly_chart(fig17, use_container_width=True)
- 
+
 # Country-level geo scatter
 country = filtered.groupby(["Order Country","Latitude","Longitude"]).agg(
     Profit=("Order Profit Per Order","sum"),
     Revenue=("Sales","sum")
 ).reset_index()
 country["Margin_%"] = (country["Profit"] / country["Revenue"] * 100).round(2)
- 
+
 fig18 = px.scatter_geo(country, lat="Latitude", lon="Longitude",
                         size=country["Revenue"].clip(lower=1),
                         color="Margin_%",
@@ -570,7 +568,7 @@ fig18.update_layout(
     coloraxis_colorbar=dict(tickfont=dict(color=FONT_CLR), title=dict(text="Margin%", font=dict(color=FONT_CLR)))
 )
 st.plotly_chart(fig18, use_container_width=True)
- 
+
 # ─── FOOTER ──────────────────────────────────────────────────────────────────
 st.markdown("---")
 st.markdown(
@@ -578,4 +576,3 @@ st.markdown(
     "APL Logistics (KWE Group) · Supply Chain Profitability Intelligence Dashboard · Built with Streamlit & Plotly"
     "</p>", unsafe_allow_html=True
 )
- 
