@@ -153,6 +153,7 @@ def load_data():
     df = pd.read_csv(url)
     df.columns = df.columns.str.strip()
     return df
+ df = load_data()
 # ─── SIDEBAR FILTERS ─────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("### 🎛️ Filters")
