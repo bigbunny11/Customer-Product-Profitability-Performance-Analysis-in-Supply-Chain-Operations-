@@ -149,12 +149,10 @@ hr { border-color: #1e2d4a !important; }
 # ─── LOAD DATA ───────────────────────────────────────────────────────────────
 @st.cache_data
 def load_data():
-    df = pd.read_csv("D:\Supply Chain Project\APL_Logistics - APL_Logistics.csv")
+    url = "https://drive.google.com/uc?id=1kKQx31z9i1eG1unARyh0iI-C8aGJR7Ws"
+    df = pd.read_csv(url)
     df.columns = df.columns.str.strip()
     return df
- 
-df = load_data()
- 
 # ─── SIDEBAR FILTERS ─────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("### 🎛️ Filters")
