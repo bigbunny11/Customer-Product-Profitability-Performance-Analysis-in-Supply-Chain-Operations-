@@ -149,10 +149,14 @@ hr { border-color: #1e2d4a !important; }
 # ─── LOAD DATA ───────────────────────────────────────────────────────────────
 @st.cache_data
 def load_data():
-    url = "https://drive.google.com/uc?id=1kKQx31z9i1eG1unARyh0iI-C8aGJR7Ws"
+    file_id = "1kKQx31z9i1eG1unARyh0iI-C8aGJR7Ws"
+    url = f"https://drive.google.com/uc?export=download&id={file_id}"
     df = pd.read_csv(url)
     df.columns = df.columns.str.strip()
     return df
+
+with st.spinner("Loading dashboard data..."):
+    df = load_data()
  df = load_data()
 # ─── SIDEBAR FILTERS ─────────────────────────────────────────────────────────
 with st.sidebar:
